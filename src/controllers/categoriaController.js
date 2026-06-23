@@ -56,6 +56,21 @@ class CategoriaController {
             return res.status(status).json({erro: error.message});
         }
     }
+
+    async buscarPorId(req, res) {
+        try {
+            const {id} = req.params;
+
+            const categoriaEncontrada = await categoriaService.buscarPorId(id);
+
+            return res.status(200).json(categoriaEncontrada);
+        }
+        catch (error) {
+            const status = error.statusCode || 500;
+            return res.status(status).json({erro: error.message});
+        }
+    }
+    
 }
 
 module.exports = new CategoriaController();

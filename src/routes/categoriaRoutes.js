@@ -10,4 +10,6 @@ router.put('/categorias/:id', categoriaController.atualizar);
 
 router.delete('/categorias/:id', categoriaController.deletar);
 
+router.get('/categorias/:id', categoriaController.buscarPorId);
+
 module.exports = router;
