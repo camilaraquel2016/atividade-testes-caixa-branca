@@ -85,6 +85,35 @@ class CategoriaService {
             throw dbError;
         }
     }
+
+    async buscarPorId(id) {
+      validador.campoObrigatorio(id, 'O ID de categoria não pode ser nulo ou vazio.');
+
+      try {
+
+        const categoriaEncontrada = await categoriaRepository.findById(id);
+
+        if (!categoriaEncontrada) {
+          const error = new Error('Categoria não encontrada.');
+          error.statusCode = 404;
+          throw error;
+        }
+
+        return categoriaEncontrada;
+      }
+      catch (dbError) {
+
+        if (dbError.statusCode) throw dbError;
+        
+        if (dbError.code === DbErrors.INVALID_TEXT_REPRESENTATION) {
+          const error = new Error('ID informado não é válido');
+          error.statusCode = 400;
+          throw error;
+        }
+
+        throw dbError;
+      }
+    }
 }
 
 module.exports = new CategoriaService();
