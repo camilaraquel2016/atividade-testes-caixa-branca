@@ -1,5 +1,6 @@
 const express = require('express');
 require('dotenv').config();
+const categoriaRoutes = require('./routes/categoriaRoutes');
 
 const pool = require('./config/database');
 
@@ -12,5 +13,7 @@ app.get('/', (req, res) => {
         mensagem: "API de Vendas inicializada",
     });
 });
+
+app.use(categoriaRoutes);
 
 module.exports = app;
