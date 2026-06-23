@@ -2,10 +2,11 @@ const express = require('express');
 require('dotenv').config();
 const categoriaRoutes = require('./routes/categoriaRoutes');
 
+const errorMiddleware = require('./middlewares/errorMiddleware');
+
 const pool = require('./config/database');
 
 const app = express();
-
 app.use(express.json());
 
 app.get('/', (req, res) => {
@@ -15,5 +16,8 @@ app.get('/', (req, res) => {
 });
 
 app.use(categoriaRoutes);
+
+
+app.use(errorMiddleware);
 
 module.exports = app;
