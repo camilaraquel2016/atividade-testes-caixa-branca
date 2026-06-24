@@ -2,6 +2,7 @@ const express = require('express');
 require('dotenv').config();
 const categoriaRoutes = require('./routes/categoriaRoutes');
 const clienteRoutes = require('./routes/clienteRoutes');
+const pecaRoutes = require('./routes/pecaRoutes');
 const errorMiddleware = require('./middlewares/errorMiddleware');
 
 const pool = require('./config/database');
@@ -16,6 +17,7 @@ app.get('/', (req, res) => {
 });
 
 app.use(categoriaRoutes);
+app.use(pecaRoutes);
 
 app.use('/api/clientes', clienteRoutes);
 
