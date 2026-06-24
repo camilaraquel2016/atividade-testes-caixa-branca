@@ -1,9 +1,16 @@
 class Validator {
 
     campoObrigatorio(campo, mensagemErro = 'Este campo é obrigatório.') {
-        if (!campo || campo.trim() === '') {
-            const error = new Error(mensagemErro);
-            error.statusCode = 422;
+
+        if (campo === undefined || campo === null) {
+            const error = new Error(mensagem);
+            error.statusCode = 400;
+            throw error;
+        }
+
+        if (typeof campo === 'string' && campo.trim() === "") {
+            const error = new Error(mensagem);
+            error.statusCode = 400;
             throw error;
         }
     }
