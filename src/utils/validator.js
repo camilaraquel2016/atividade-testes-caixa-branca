@@ -1,9 +1,16 @@
 class Validator {
 
     campoObrigatorio(campo, mensagemErro = 'Este campo é obrigatório.') {
-        if (!campo || campo.trim() === '') {
-            const error = new Error(mensagemErro);
-            error.statusCode = 422;
+
+        if (campo === undefined || campo === null) {
+            const error = new Error(mensagem);
+            error.statusCode = 400;
+            throw error;
+        }
+
+        if (typeof campo === 'string' && campo.trim() === "") {
+            const error = new Error(mensagem);
+            error.statusCode = 400;
             throw error;
         }
     }
@@ -22,6 +29,32 @@ class Validator {
         const regexTelefone = /^(\(?[1-9]{2}\)?\s?)?(9?\d{4}-?\d{4})$/;
 
         if (!regexTelefone.test(telefone)) {
+            const error = new Error(mensagemErro);
+            error.statusCode = 422;
+            throw error;
+        }
+    }
+
+    precoValido(valor, mensagemErro) {
+        if (valor <= 0) {
+            const error = new Error(mensagemErro);
+            error.statusCode = 422;
+            throw error;
+        }
+    }
+
+    estoqueValido(valor, mensagemErro) {
+        if (valor < 0) {
+            const error = new Error(mensagemErro);
+            error.statusCode = 422;
+            throw error;
+        }
+    }
+
+    situacaoValida(situacao, mensagemErro) {
+        const valoresPermitidos = ['ATIVA', 'INATIVA'];
+
+        if (!valoresPermitidos.includes(situacao)) {
             const error = new Error(mensagemErro);
             error.statusCode = 422;
             throw error;
