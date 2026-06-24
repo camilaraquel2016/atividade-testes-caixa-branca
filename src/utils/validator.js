@@ -34,6 +34,32 @@ class Validator {
             throw error;
         }
     }
+
+    precoValido(valor, mensagemErro) {
+        if (valor <= 0) {
+            const error = new Error(mensagemErro);
+            error.statusCode = 422;
+            throw error;
+        }
+    }
+
+    estoqueValido(valor, mensagemErro) {
+        if (valor < 0) {
+            const error = new Error(mensagemErro);
+            error.statusCode = 422;
+            throw error;
+        }
+    }
+
+    situacaoValida(situacao, mensagemErro) {
+        const valoresPermitidos = ['ATIVA', 'INATIVA'];
+
+        if (!valoresPermitidos.includes(situacao)) {
+            const error = new Error(mensagemErro);
+            error.statusCode = 422;
+            throw error;
+        }
+    }
 }
 
 module.exports = new Validator();
