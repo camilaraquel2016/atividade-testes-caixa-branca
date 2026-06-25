@@ -2,6 +2,8 @@ const pecaRepository = require('../repositories/pecaRepository');
 const validador = require('../utils/validator');
 const DbErrors = require('../constants/dbErrors');
 const categoriaService = require('./categoriaService');
+const { withMappedError } = require('../utils/errorHelper');
+const DbConstraints = require('../constants/dbConstraints');
 
 class PecaService {
 
@@ -18,19 +20,14 @@ class PecaService {
         validador.estoqueValido(qtd_estoque, 'A quantidade em estoque deve ser maior ou igual a zero');
 
         await categoriaService.buscarPorId(categoria_id); 
-        
-        try {
-            return await pecaRepository.create(peca);
-        } catch (e) {
-            
-            if (e.code === DbErrors.UNIQUE_VIOLATION) {
-                const error = new Error("Já existe uma peça cadastrada com esse código");
-                error.statusCode = 409;
-                throw error;
-            }
 
-            throw e;
-        }
+        return await withMappedError(
+            () => pecaRepository.create(peca),
+
+            {
+                [DbConstraints.PECAS.CODIGO_UNIQUE]: { message : "Já existe uma peça cadastrada com esse código", statusCode: 409}
+            }
+        );
     }
 
     async listarTodas(filtros) {
@@ -40,28 +37,22 @@ class PecaService {
     async buscarPorId(id) {
         validador.campoObrigatorio(id, 'O ID de peça não pode ser nulo ou vazio');
 
-        try {
-            const pecaEncontrada = await pecaRepository.findById(id);
+        const pecaEncontrada = await withMappedError(
+            () => pecaRepository.findById(id),
 
-            if (!pecaEncontrada) {
-                const erro = new Error("Peça não encontrada");
-                erro.statusCode = 404;
-                throw erro;
+            {
+                [DbErrors.INVALID_TEXT_REPRESENTATION]: {message: "ID de peça informado não é válido", statusCode: 400}
             }
+        );
 
-            return pecaEncontrada;
-        } catch(e) {
+        if (!pecaEncontrada) {
+            const erro = new Error("Peça não encontrada");
+            erro.statusCode = 404;
+            throw erro;
 
-            if (e.statusCode) throw e;
-
-            if (e.code == DbErrors.INVALID_TEXT_REPRESENTATION) {
-                const error = new Error('ID informado não é válido');
-                error.statusCode = 400;
-                throw error;
-            }
-
-            throw e;
         }
+
+        return pecaEncontrada;
     }
 
     async atualizar(id, dadosNovos) {
@@ -79,6 +70,10 @@ class PecaService {
             validador.situacaoValida(dadosNovos.situacao, "A situação deve ser apenas 'ATIVA' ou 'INATIVA'");
         }
 
+        if (dadosNovos.categoria_id !== undefined) {
+            await categoriaService.buscarPorId(dadosNovos.categoria_id);
+        }
+
         const pecaAlterada = {
             codigo: dadosNovos.codigo !== undefined ? dadosNovos.codigo : pecaOriginal.codigo,
             nome: dadosNovos.nome !== undefined ? dadosNovos.nome : pecaOriginal.nome,
@@ -88,43 +83,31 @@ class PecaService {
             situacao: dadosNovos.situacao !== undefined ? dadosNovos.situacao : pecaOriginal.situacao
         }
 
-        if (dadosNovos.categoria_id !== undefined) {
-            await categoriaService.buscarPorId(dadosNovos.categoria_id);
-        }
+        return await withMappedError(
+            () => pecaRepository.update(id, pecaAlterada),
 
-        try {
-            return await pecaRepository.update(id, pecaAlterada);
-        } catch (e) {
-            if (e.code === DbErrors.UNIQUE_VIOLATION) {
-                const error = new Error("Não é possível atualizar peça para esse código pois ele já está em uso por outra peça");
-                error.statusCode = 409;
-                throw error;
+            {
+                [DbConstraints.PECAS.CODIGO_UNIQUE]: {message: "Não é possível atualizar peça para esse código pois ele já está em uso por outra peça", statusCode: 409}
             }
-
-            throw e;
-        }
+        )
     }
 
     async deletar(id) {
         validador.campoObrigatorio(id, "O ID da peça é obrigatório");
 
-        try {
-            await this.buscarPorId(id);
+        await this.buscarPorId(id);
 
-            return await pecaRepository.delete(id);
-        }
-        catch (e) {
-            if (e.statusCode) throw e;
-
-            if (e.code === DbErrors.FOREIGN_KEY_VIOLATION) {
-                const error = new Error("Não é possível deletar uma peça que possui pedidos vinculados.");
-                error.statusCode = 400;
-                throw error;
+        return await withMappedError(
+            () => pecaRepository.delete(id),
+            
+            {
+                [DbErrors.FOREIGN_KEY_VIOLATION]: { 
+                    message: "Não é possível deletar uma peça que possui pedidos vinculados.", 
+                    statusCode: 400 
+                }
             }
-        }
-        
-        throw e;
-    }
+        );
+    }   
 }
 
 module.exports = new PecaService();
