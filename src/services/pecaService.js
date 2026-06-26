@@ -1,5 +1,4 @@
 const pecaRepository = require('../repositories/pecaRepository');
-const validador = require('../utils/validator');
 const DbErrors = require('../constants/dbErrors');
 const categoriaService = require('./categoriaService');
 const { withMappedError } = require('../utils/errorHelper');
@@ -9,15 +8,6 @@ class PecaService {
 
     async criar(peca) {
         const {codigo, nome, qtd_estoque, preco, categoria_id} = peca;
-
-        validador.campoObrigatorio(codigo, "O campo 'código' não pode ser nulo ou vazio");
-        validador.campoObrigatorio(nome, "O campo 'nome' não pode ser nulo ou vazio");
-        validador.campoObrigatorio(qtd_estoque, "O campo 'qtd_estoque' não pode ser nulo ou vazio");
-        validador.campoObrigatorio(preco, "O campo 'preco' não pode ser nulo ou vazio");
-        validador.campoObrigatorio(categoria_id, "O campo 'categoria_id' não pode ser nulo ou vazio");
-
-        validador.precoValido(preco, 'O preço deve ser maior que zero');
-        validador.estoqueValido(qtd_estoque, 'A quantidade em estoque deve ser maior ou igual a zero');
 
         await categoriaService.buscarPorId(categoria_id); 
 
@@ -35,21 +25,12 @@ class PecaService {
     }
 
     async buscarPorId(id) {
-        validador.campoObrigatorio(id, 'O ID de peça não pode ser nulo ou vazio');
-
-        const pecaEncontrada = await withMappedError(
-            () => pecaRepository.findById(id),
-
-            {
-                [DbErrors.INVALID_TEXT_REPRESENTATION]: {message: "ID de peça informado não é válido", statusCode: 400}
-            }
-        );
+        const pecaEncontrada = await pecaRepository.findById(id);
 
         if (!pecaEncontrada) {
             const erro = new Error("Peça não encontrada");
             erro.statusCode = 404;
             throw erro;
-
         }
 
         return pecaEncontrada;
@@ -57,18 +38,6 @@ class PecaService {
 
     async atualizar(id, dadosNovos) {
         const pecaOriginal = await this.buscarPorId(id);
-
-        if (dadosNovos.preco !== undefined) {
-            validador.precoValido(dadosNovos.preco, "O preço deve ser um número maior que zero");
-        }
-        if (dadosNovos.qtd_estoque !== undefined) {
-            validador.estoqueValido(dadosNovos.qtd_estoque, "A quantidade em estoque deve ser maior ou igual a zero");
-        }
-
-        if (dadosNovos.situacao !== undefined) {
-            dadosNovos.situacao = dadosNovos.situacao.toUpperCase();
-            validador.situacaoValida(dadosNovos.situacao, "A situação deve ser apenas 'ATIVA' ou 'INATIVA'");
-        }
 
         if (dadosNovos.categoria_id !== undefined) {
             await categoriaService.buscarPorId(dadosNovos.categoria_id);
@@ -93,8 +62,7 @@ class PecaService {
     }
 
     async deletar(id) {
-        validador.campoObrigatorio(id, "O ID da peça é obrigatório");
-
+ 
         await this.buscarPorId(id);
 
         return await withMappedError(
