@@ -7,9 +7,7 @@ const DbConstraints = require('../constants/dbConstraints');
 class PecaService {
 
     async criar(peca) {
-        const {codigo, nome, qtd_estoque, preco, categoria_id} = peca;
-
-        await categoriaService.buscarPorId(categoria_id); 
+        await categoriaService.buscarPorId(peca.categoria_id); 
 
         return await withMappedError(
             () => pecaRepository.create(peca),
