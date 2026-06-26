@@ -43,17 +43,14 @@ class PecaService {
             await categoriaService.buscarPorId(dadosNovos.categoria_id);
         }
 
-        const pecaAlterada = {
-            codigo: dadosNovos.codigo !== undefined ? dadosNovos.codigo : pecaOriginal.codigo,
-            nome: dadosNovos.nome !== undefined ? dadosNovos.nome : pecaOriginal.nome,
-            qtd_estoque: dadosNovos.qtd_estoque !== undefined ? dadosNovos.qtd_estoque : pecaOriginal.qtd_estoque,
-            preco: dadosNovos.preco !== undefined ? dadosNovos.preco : pecaOriginal.preco,
-            categoria_id: dadosNovos.categoria_id !== undefined ? dadosNovos.categoria_id : pecaOriginal.categoria_id,
-            situacao: dadosNovos.situacao !== undefined ? dadosNovos.situacao : pecaOriginal.situacao
+        if (dadosNovos.situacao !== undefined) {
+            dadosNovos.situacao = dadosNovos.situacao.toUpperCase();
         }
 
+        const pecaAtualizada = {...pecaOriginal,...dadosNovos};
+
         return await withMappedError(
-            () => pecaRepository.update(id, pecaAlterada),
+            () => pecaRepository.update(id, pecaAtualizada),
 
             {
                 [DbConstraints.PECAS.CODIGO_UNIQUE]: {message: "Não é possível atualizar peça para esse código pois ele já está em uso por outra peça", statusCode: 409}
