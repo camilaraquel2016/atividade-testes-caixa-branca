@@ -1,5 +1,4 @@
 const clienteRepository = require("../repositories/clienteRepository");
-const pedidoRepository = require("../repositories/pedidoRepository");
 const validador = require("./servicesValidator");
 const DbErrors = require("../constants/dbErrors");
 const DbConstraints = require("../constants/dbConstraints");
@@ -29,12 +28,7 @@ class ClienteService {
 
     async buscarPorId(id) {
 
-        const cliente = await withMappedError(
-            () => clienteRepository.findById(id),
-            {
-                [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID do cliente informado não é um formato válido.", statusCode: 400 }
-            }
-        );
+        const cliente = await clienteRepository.findById(id)
 
         if (!cliente) {
             const error = new Error("Cliente não encontrado.");
@@ -64,8 +58,7 @@ class ClienteService {
         return await withMappedError(
             () => clienteRepository.update(id, clienteAlterado),
             {
-                [DbConstraints.CLIENTES.TELEFONE_UNIQUE]: { message: "Já existe outro cliente cadastrado com este telefone.", statusCode: 409 },
-                [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID do cliente informado não é um formato válido.", statusCode: 400 }
+                [DbConstraints.CLIENTES.TELEFONE_UNIQUE]: { message: "Já existe outro cliente cadastrado com este telefone.", statusCode: 409 }
             }
         );
     }
@@ -77,8 +70,7 @@ class ClienteService {
         return await withMappedError(
             () => clienteRepository.delete(id),
             {
-                [DbErrors.FOREIGN_KEY_VIOLATION]: { message: "Não é possível deletar um cliente que possui pedidos vinculados.", statusCode: 400 },
-                [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID do cliente informado não é um formato válido.", statusCode: 400 }
+                [DbErrors.FOREIGN_KEY_VIOLATION]: { message: "Não é possível deletar um cliente que possui pedidos vinculados.", statusCode: 400 }
             }
         );
     }

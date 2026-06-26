@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
 
-const clienteController = require('../controllers/clienteController')
+const clienteController = require('../controllers/clienteController');
 
 const validarRequisicao = require('../middlewares/validadorSchema')
 
 const { clientePostSchema, clientePatchSchema } = require('../schemas/clienteSchema');
+const idSchema = require("../schemas/idSchema");
 
 router.post('/', validarRequisicao(clientePostSchema, "body"), clienteController.criar);
 
-router.get('/', (req, res) => clienteController.listar(req, res));
+router.get('/', clienteController.listar);
 
-router.patch('/:id', validarRequisicao(clientePatchSchema, "body"), clienteController.atualizar);
+router.patch('/:id', validarRequisicao(idSchema, "params"), validarRequisicao(clientePatchSchema, "body"), clienteController.atualizar);
 
-router.get('/:id', (req, res) => clienteController.buscarPorId(req, res));
+router.get('/:id', validarRequisicao(idSchema, "params"), clienteController.buscarPorId);
 
-router.delete('/:id', (req, res) => clienteController.deletar(req, res));
+router.delete('/:id', validarRequisicao(idSchema, "params"), clienteController.deletar);
 
 module.exports = router;
