@@ -1,10 +1,10 @@
 class Cliente {
-    constructor(data) {
-        this.id = data.id;
-        this.nome = data.nome;
-        this.cpf = data.cpf;
-        this.telefone = data.telefone;
-        this.criado_em = data.criado_em;
+    constructor({ id, nome, cpf, telefone, criado_em}) {
+        this.id = id;
+        this.nome = nome;
+        this.cpf = cpf;
+        this.telefone = telefone;
+        this.criado_em = criado_em;
     }
 }
 
