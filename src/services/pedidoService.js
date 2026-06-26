@@ -4,7 +4,6 @@ const clienteRepository = require('../repositories/clienteRepository');
 const pecaService = require('./pecaService');
 const servicesValidador = require('./servicesValidator');
 const crypto = require('crypto');
-const DbErrors = require("../constants/dbErrors");
 const DbConstraints = require("../constants/dbConstraints");
 const { withMappedError } = require("../utils/errorHelper");
 
@@ -23,10 +22,7 @@ class PedidoService {
     async criar(dadosPedido) {
         const { cliente_id, itens } = dadosPedido;
 
-        const cliente = await withMappedError(
-            () => clienteRepository.findById(cliente_id),
-            { [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID do cliente informado não é um formato válido.", statusCode: 400 } }
-        );
+        const cliente = await clienteRepository.findById(cliente_id);
 
         if (!cliente) {
             const error = new Error("O cliente informado não existe.");
@@ -39,10 +35,7 @@ class PedidoService {
 
         for (const item of itens) {
            
-            const peca = await withMappedError(
-                () => pecaRepository.findById(item.peca_id),
-                { [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID da peça informado não é um formato válido.", statusCode: 400 } }
-            );
+            const peca = await pecaRepository.findById(item.peca_id);
 
             if (!peca || peca.situacao === 'INATIVA') {
                 const error = new Error(`A peça com ID ${item.peca_id} não foi encontrada ou está inativa.`);
@@ -94,10 +87,7 @@ class PedidoService {
     }
 
     async buscarPorId(id) {
-        const pedido = await withMappedError(
-            () => pedidoRepository.findById(id),
-            { [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID do pedido informado não é um formato válido.", statusCode: 400 } }
-        );
+        const pedido = await pedidoRepository.findById(id);
 
         if (!pedido) {
             const error = new Error("Pedido não encontrado.");
@@ -142,10 +132,7 @@ class PedidoService {
             await this.#estornarEstoque(pedidoOriginal);
         }
 
-        await withMappedError(
-            () => pedidoRepository.update(id, { status: statusFormatado }),
-            { [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID do pedido informado não é um formato válido.", statusCode: 400 } }
-        );
+        await pedidoRepository.update(id, {status: statusFormatado});
 
         return await this.buscarPorId(id);
     }
@@ -163,10 +150,7 @@ class PedidoService {
             await this.#estornarEstoque(pedido);
         }
 
-        await withMappedError(
-            () => pedidoRepository.delete(id),
-            { [DbErrors.INVALID_TEXT_REPRESENTATION]: { message: "O ID do pedido informado não é um formato válido.", statusCode: 400 } }
-        );
+        await pedidoRepository.delete(id);  
     }
 }
 
