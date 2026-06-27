@@ -14,8 +14,15 @@ const pedidoBaseSchema = z.object({
     cliente_id: uuidObrigatorio("ID do cliente")
         .uuid("O ID do cliente informado não é um UUID válido."),
     
-    itens: z.array(itemPedidoSchema)
-        .min(1, "Não é possível criar um pedido sem pelo menos um item.")
+    itens: z.array(itemPedidoSchema, {
+    error: (issue) => {
+        if (issue.input === undefined) {
+            return "O campo 'itens' é obrigatório na criação do pedido.";
+        }
+        return "O campo 'itens' deve ser enviado no formato de lista (array).";
+    }
+    })
+    .min(1, "Não é possível criar um pedido sem pelo menos um item.")
 });
 
 const pedidoPostSchema = pedidoBaseSchema;
