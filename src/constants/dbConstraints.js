@@ -9,12 +9,12 @@ module.exports = {
     },
 
     CLIENTES: {
-        CPF_UNIQUE: 'clientes_cpf_key',
+        CPF_UNIQUE: 'clientes_cpf_unique',
         TELEFONE_UNIQUE: 'clientes_telefone_unique'
     },
 
     PEDIDOS: {
-        NUMERO_UNIQUE: 'pedidos_numero_key',    
-        CLIENTE_FKEY: 'pedidos_cliente_id_fkey'  
+        NUMERO_UNIQUE: 'pedidos_numero_key',
+        CLIENTE_FKEY: 'pedidos_cliente_id_fkey'
     }
 }; 
