@@ -6,7 +6,7 @@ const clienteBaseSchema = z.object({
         .trim()
         .min(3, "O nome do cliente deve possuir pelo menos 3 caracteres."),
 
-    cpf: textoObrigatorio("CPF")
+    cpf: textoObrigatorio("cpf")
         .trim()
         .regex(/^[0-9]{11}$|^[0-9]{3}\.[0-9]{3}\.[0-9]{3}-[0-9]{2}$/, 
             "CPF formatado incorretamente. Use 11 dígitos puros ou o padrão XXX.XXX.XXX-XX"),

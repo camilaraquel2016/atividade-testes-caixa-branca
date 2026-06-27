@@ -3,7 +3,7 @@ const {textoObrigatorio, numeroObrigatorio, uuidObrigatorio} = require("./utils"
 
 const pecaBaseSchema = z.object({
 
-    codigo: textoObrigatorio("código")
+    codigo: textoObrigatorio("codigo")
         .trim()
         .min(1, "O código não pode estar vazio ou conter apenas espaços."),
 
@@ -11,18 +11,18 @@ const pecaBaseSchema = z.object({
         .trim()
         .min(3, "O nome deve possuir pelo menos 3 caracteres."),
 
-    qtd_estoque: numeroObrigatorio("quantidade em estoque")
-        .int("A quantidade em estoque deve ser um número inteiro.")
-        .nonnegative("A quantidade em estoque não pode ser negativa."),
+    qtd_estoque: numeroObrigatorio("qtd_estoque")
+        .int("A 'qtd_estoque' deve ser um número inteiro.")
+        .nonnegative("A 'qtd_estoque' não pode ser negativa."),
 
     preco: numeroObrigatorio("preço")
-        .positive("O preço deve ser maior que zero."),
+        .positive("O 'preco' deve ser maior que zero."),
 
     categoria_id: uuidObrigatorio("ID da categoria")
-        .uuid("O ID da categoria informado não é um UUID válido."),
+        .uuid("O 'categoria_id' informado não é um UUID válido."),
 
     situacao: z.enum(["ativa", "inativa"], {
-        error: () => "A situação deve ser 'ativa' ou 'inativa'."
+        error: () => "A 'situacao' deve ser 'ativa' ou 'inativa'."
     })
 
 });

@@ -2,17 +2,17 @@ const { z } = require("zod");
 const { uuidObrigatorio, numeroObrigatorio } = require("./utils");
 
 const itemPedidoSchema = z.object({
-    peca_id: uuidObrigatorio("ID da peça")
-        .uuid("O ID da peça informado não é um UUID válido."),
+    peca_id: uuidObrigatorio("peca_id")
+        .uuid("O 'peca_id' informado não é um UUID válido."),
     
     quantidade: numeroObrigatorio("quantidade")
-        .int("A quantidade deve ser um número inteiro.")
-        .positive("A quantidade deve ser maior que zero.")
+        .int("A 'quantidade' deve ser um número inteiro.")
+        .positive("A 'quantidade' deve ser maior que zero.")
 });
 
 const pedidoBaseSchema = z.object({
-    cliente_id: uuidObrigatorio("ID do cliente")
-        .uuid("O ID do cliente informado não é um UUID válido."),
+    cliente_id: uuidObrigatorio("cliente_id")
+        .uuid("O 'cliente_id' informado não é um UUID válido."),
     
     itens: z.array(itemPedidoSchema, {
     error: (issue) => {
@@ -29,7 +29,7 @@ const pedidoPostSchema = pedidoBaseSchema;
 
 const pedidoQuerySchema = z.object({
     situacao: z.string().optional(),
-    cliente_id: z.string().uuid("O ID do cliente para filtro deve ser um UUID válido.").optional()
+    cliente_id: z.string().uuid("O 'cliente_id' para filtro deve ser um UUID válido.").optional()
 });
 
 module.exports = {
