@@ -3,6 +3,10 @@ const DbErrors = require("../constants/dbErrors");
 const DbConstraints = require("../constants/dbConstraints");
 const { withMappedError} = require("../utils/errorHelper");
 
+const NotFoundError = require("../exceptions/NotFoundError");
+const ConflictError = require("../exceptions/ConflictError");
+const BusinessError = require("../exceptions/BusinessError");
+
 class CategoriaService {
 
     async criar(nome) {
@@ -10,7 +14,7 @@ class CategoriaService {
             () => categoriaRepository.create(nome),
 
             {
-                [DbConstraints.CATEGORIAS.NOME_UNIQUE]: {message: "Já existe uma categoria cadastrada com este nome.", statusCode: 409}
+                [DbConstraints.CATEGORIAS.NOME_UNIQUE]: { error: ConflictError, message: "Já existe uma categoria cadastrada com este nome."}
             }
         );
     }
@@ -26,7 +30,7 @@ class CategoriaService {
             () => categoriaRepository.update(id, nome),
 
             {
-                [DbConstraints.CATEGORIAS.NOME_UNIQUE]: {message: "Já existe outra categoria cadastrada com este nome", statusCode: 409},
+                [DbConstraints.CATEGORIAS.NOME_UNIQUE]: { error: ConflictError, message: "Já existe outra categoria cadastrada com este nome"},
             }
         );
     }
@@ -38,7 +42,7 @@ class CategoriaService {
             () => categoriaRepository.delete(id),
 
             {
-                [DbErrors.FOREIGN_KEY_VIOLATION]: {message: "Não é possível deletar uma categoria que possui peças vinculadas" , statusCode: 400}
+                [DbErrors.FOREIGN_KEY_VIOLATION]: { error: BusinessError, message: "Não é possível deletar uma categoria que possui peças vinculadas"}
             }
         );
     }
@@ -47,9 +51,7 @@ class CategoriaService {
         const categoriaEncontrada = await categoriaRepository.findById(id);
    
         if (!categoriaEncontrada) {
-            const error = new Error('Categoria não encontrada.');
-            error.statusCode = 404;
-            throw error;
+            throw new NotFoundError("Categoria não encontrada.");
         }
 
         return categoriaEncontrada;

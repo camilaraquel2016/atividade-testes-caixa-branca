@@ -4,6 +4,10 @@ const categoriaService = require('./categoriaService');
 const { withMappedError } = require('../utils/errorHelper');
 const DbConstraints = require('../constants/dbConstraints');
 
+const NotFoundError = require("../exceptions/NotFoundError");
+const ConflictError = require("../exceptions/ConflictError");
+const BusinessError = require("../exceptions/BusinessError");
+
 class PecaService {
 
     async criar(peca) {
@@ -13,26 +17,27 @@ class PecaService {
             () => pecaRepository.create(peca),
 
             {
-                [DbConstraints.PECAS.CODIGO_UNIQUE]: { message : "Já existe uma peça cadastrada com esse código", statusCode: 409}
+                [DbConstraints.PECAS.CODIGO_UNIQUE]: {error: ConflictError, message : "Já existe uma peça cadastrada com esse código"}
             }
         );
     }
+
 
     async listarTodas(filtros) {
         return await pecaRepository.findAll(filtros);
     }
 
+
     async buscarPorId(id) {
         const pecaEncontrada = await pecaRepository.findById(id);
 
         if (!pecaEncontrada) {
-            const erro = new Error("Peça não encontrada");
-            erro.statusCode = 404;
-            throw erro;
+            throw new NotFoundError("Peça não encontrada");
         }
 
         return pecaEncontrada;
     }
+
 
     async atualizar(id, dadosNovos) {
         const pecaOriginal = await this.buscarPorId(id);
@@ -51,22 +56,20 @@ class PecaService {
             () => pecaRepository.update(id, pecaAtualizada),
 
             {
-                [DbConstraints.PECAS.CODIGO_UNIQUE]: {message: "Não é possível atualizar peça para esse código pois ele já está em uso por outra peça", statusCode: 409}
+                [DbConstraints.PECAS.CODIGO_UNIQUE]: {error: ConflictError, message: "Não é possível atualizar peça para esse código pois ele já está em uso por outra peça"}
             }
         )
     }
 
     async deletar(id) {
- 
         await this.buscarPorId(id);
 
         return await withMappedError(
             () => pecaRepository.delete(id),
             
             {
-                [DbErrors.FOREIGN_KEY_VIOLATION]: { 
-                    message: "Não é possível deletar uma peça que possui pedidos vinculados.", 
-                    statusCode: 400 
+                [DbErrors.FOREIGN_KEY_VIOLATION]: {error: BusinessError,
+                    message: "Não é possível deletar uma peça que possui pedidos vinculados." 
                 }
             }
         );

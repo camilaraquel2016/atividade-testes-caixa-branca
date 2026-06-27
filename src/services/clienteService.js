@@ -1,8 +1,12 @@
 const clienteRepository = require("../repositories/clienteRepository");
-const validador = require("./servicesValidator");
 const DbErrors = require("../constants/dbErrors");
 const DbConstraints = require("../constants/dbConstraints");
 const { withMappedError } = require("../utils/errorHelper");
+
+const NotFoundError = require("../exceptions/NotFoundError");
+const ConflictError = require("../exceptions/ConflictError");
+const BusinessError = require("../exceptions/BusinessError");
+
 
 class ClienteService {
 
@@ -11,8 +15,9 @@ class ClienteService {
         return await withMappedError(
             () => clienteRepository.create(dadosCliente),
             {
-                [DbConstraints.CLIENTES.CPF_UNIQUE]: { message: "Já existe um cliente cadastrado com este CPF.", statusCode: 409 },
-                [DbConstraints.CLIENTES.TELEFONE_UNIQUE]: { message: "Já existe um cliente cadastrado com este telefone.", statusCode: 409 }
+                [DbConstraints.CLIENTES.CPF_UNIQUE]: { error: ConflictError, message: "Já existe um cliente cadastrado com este CPF." },
+
+                [DbConstraints.CLIENTES.TELEFONE_UNIQUE]: { error: ConflictError, message: "Já existe um cliente cadastrado com este telefone." }
             }
         );
     }
@@ -22,38 +27,28 @@ class ClienteService {
     }
 
     async buscarPorId(id) {
-
         const cliente = await clienteRepository.findById(id)
 
         if (!cliente) {
-            const error = new Error("Cliente não encontrado.");
-            error.statusCode = 404;
-            throw error;
+            throw new NotFoundError("Cliente não encontrado.");
         }
 
         return cliente;
     }
 
     async atualizar(id, dadosCliente) {
-
         const clienteOriginal = await this.buscarPorId(id);
 
-
         if (dadosCliente.cpf && dadosCliente.cpf !== clienteOriginal.cpf) {
-            const error = new Error("Não é permitido alterar o CPF de um cliente cadastrado.");
-            error.statusCode = 400;
-            throw error;
+            throw new BusinessError("Não é permitido alterar o CPF de um cliente cadastrado.");
         }
 
-        const clienteAlterado = {
-            nome: dadosCliente.nome !== undefined ? dadosCliente.nome : clienteOriginal.nome,
-            telefone: dadosCliente.telefone !== undefined ? dadosCliente.telefone : clienteOriginal.telefone
-        };
+        const clienteAlterado = {...clienteOriginal, ...dadosCliente};
 
         return await withMappedError(
             () => clienteRepository.update(id, clienteAlterado),
             {
-                [DbConstraints.CLIENTES.TELEFONE_UNIQUE]: { message: "Já existe outro cliente cadastrado com este telefone.", statusCode: 409 }
+                [DbConstraints.CLIENTES.TELEFONE_UNIQUE]: { error: ConflictError, message: "Já existe outro cliente cadastrado com este telefone." }
             }
         );
     }
@@ -65,7 +60,7 @@ class ClienteService {
         return await withMappedError(
             () => clienteRepository.delete(id),
             {
-                [DbErrors.FOREIGN_KEY_VIOLATION]: { message: "Não é possível deletar um cliente que possui pedidos vinculados.", statusCode: 400 }
+                [DbErrors.FOREIGN_KEY_VIOLATION]: { error: BusinessError, message: "Não é possível deletar um cliente que possui pedidos vinculados."}
             }
         );
     }
