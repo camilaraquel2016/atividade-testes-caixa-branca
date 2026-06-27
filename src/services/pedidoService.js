@@ -1,11 +1,15 @@
 const pedidoRepository = require('../repositories/pedidoRepository');
-const pecaRepository = require('../repositories/pecaRepository');
-const clienteRepository = require('../repositories/clienteRepository');
 const pecaService = require('./pecaService');
 const servicesValidador = require('./servicesValidator');
 const crypto = require('crypto');
 const DbConstraints = require("../constants/dbConstraints");
 const { withMappedError } = require("../utils/errorHelper");
+
+const clienteService = require('./clienteService');
+
+const NotFoundError = require('../exceptions/NotFoundError');
+const BusinessError = require('../exceptions/BusinessError');
+const ConflictError = require('../exceptions/ConflictError');
 
 class PedidoService {
 
@@ -22,25 +26,17 @@ class PedidoService {
     async criar(dadosPedido) {
         const { cliente_id, itens } = dadosPedido;
 
-        const cliente = await clienteRepository.findById(cliente_id);
-
-        if (!cliente) {
-            const error = new Error("O cliente informado não existe.");
-            error.statusCode = 404;
-            throw error;
-        }
+        await clienteService.buscarPorId(cliente_id);
 
         let valorTotalPedido = 0;
         const listaItensProcessados = [];
 
         for (const item of itens) {
            
-            const peca = await pecaRepository.findById(item.peca_id);
+            const peca = await pecaService.buscarPorId(item.peca_id);
 
-            if (!peca || peca.situacao === 'INATIVA') {
-                const error = new Error(`A peça com ID ${item.peca_id} não foi encontrada ou está inativa.`);
-                error.statusCode = 404;
-                throw error;
+            if (peca.situacao === 'INATIVA') {
+                throw new BusinessError(`A peça com ID ${item.peca_id} está inativa`);
             }
 
             servicesValidador.estoqueSuficiente(
@@ -76,8 +72,9 @@ class PedidoService {
         return await withMappedError(
             () => pedidoRepository.create(pedidoPronto, listaItensProcessados),
             {
-                [DbConstraints.PEDIDOS.NUMERO_UNIQUE]: { message: "Colisão de numeração de pedido. Tente enviar novamente.", statusCode: 409 },
-                [DbConstraints.PEDIDOS.CLIENTE_FKEY]: { message: "O cliente informado não foi encontrado na base de dados.", statusCode: 400 }
+                [DbConstraints.PEDIDOS.NUMERO_UNIQUE]: { error: ConflictError, message: "Colisão de numeração de pedido. Tente enviar novamente." },
+
+                [DbConstraints.PEDIDOS.CLIENTE_FKEY]: { error: NotFoundError, message: "O cliente informado não foi encontrado na base de dados." }
             }
         );
     }
@@ -90,10 +87,9 @@ class PedidoService {
         const pedido = await pedidoRepository.findById(id);
 
         if (!pedido) {
-            const error = new Error("Pedido não encontrado.");
-            error.statusCode = 404;
-            throw error;
+            throw new NotFoundError("Pedido não encontrado")
         }
+
         return pedido;
     }
 
@@ -105,27 +101,19 @@ class PedidoService {
         const pedidoOriginal = await this.buscarPorId(id);
 
         if (pedidoOriginal.status === statusFormatado) {
-            const error = new Error(`O pedido já está com o status ${statusFormatado}.`);
-            error.statusCode = 400;
-            throw error;
+            throw new BusinessError(`O pedido já está com o status ${statusFormatado}.`);
         }
 
         if (pedidoOriginal.status === 'FINALIZADO' || pedidoOriginal.status === 'CANCELADO') {
-            const error = new Error(`Não é permitido alterar o status de um pedido que já está ${pedidoOriginal.status}.`);
-            error.statusCode = 400;
-            throw error;
+            throw new BusinessError(`Não é permitido alterar o status de um pedido que já está ${pedidoOriginal.status}.`);
         }
 
         if (statusFormatado === 'FINALIZADO' && pedidoOriginal.status === 'PENDENTE') {
-            const error = new Error("Não é permitido finalizar um pedido PENDENTE. Ele precisa ser CONFIRMADO primeiro.");
-            error.statusCode = 400;
-            throw error;
+            throw new BusinessError("Não é permitido finalizar um pedido PENDENTE. Ele precisa ser CONFIRMADO primeiro.");
         }
 
         if (statusFormatado === 'PENDENTE' && pedidoOriginal.status === 'CONFIRMADO') {
-            const error = new Error("Este pedido já foi CONFIRMADO. Você não pode fazê-lo voltar para PENDENTE.");
-            error.statusCode = 400;
-            throw error;
+            throw new BusinessError("Este pedido já foi CONFIRMADO. Você não pode fazê-lo voltar para PENDENTE.");
         }
 
         if (statusFormatado === 'CANCELADO') {
@@ -141,9 +129,7 @@ class PedidoService {
         const pedido = await this.buscarPorId(id);
 
         if (pedido.status === 'CONFIRMADO' || pedido.status === 'FINALIZADO' || pedido.status === 'CANCELADO') {
-            const error = new Error(`Não é permitido excluir um pedido com status ${pedido.status}. Apenas rascunhos PENDENTES podem ser excluídos.`);
-            error.statusCode = 400;
-            throw error;
+            throw new BusinessError(`Não é permitido excluir um pedido com status ${pedido.status}. Apenas rascunhos PENDENTES podem ser excluídos.`);
         }
 
         if (pedido.status === 'PENDENTE') {
