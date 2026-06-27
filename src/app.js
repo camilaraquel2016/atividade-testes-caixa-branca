@@ -1,12 +1,6 @@
 const express = require('express');
-require('dotenv').config();
-const categoriaRoutes = require('./routes/categoriaRoutes');
-const clienteRoutes = require('./routes/clienteRoutes');
-const pecaRoutes = require('./routes/pecaRoutes');
-const pedidoRoutes = require('./routes/pedidoRoutes')
+const routes = require('./routes');
 const errorMiddleware = require('./middlewares/errorMiddleware');
-
-const pool = require('./config/database');
 
 const app = express();
 app.use(express.json());
@@ -17,11 +11,7 @@ app.get('/', (req, res) => {
     });
 });
 
-app.use('/api/categorias', categoriaRoutes);
-app.use('/api/pecas', pecaRoutes);
-
-app.use('/api/clientes', clienteRoutes);
-app.use('/api/pedidos', pedidoRoutes);
+app.use('/api', routes);
 
 app.use(errorMiddleware);
 
