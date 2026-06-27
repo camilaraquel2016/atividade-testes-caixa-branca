@@ -28,10 +28,21 @@ class PedidoService {
 
         await clienteService.buscarPorId(cliente_id);
 
+        const itensUnificados = itens.reduce((acc, item) => {
+            if (acc.has(item.peca_id)) {
+                acc.get(item.peca_id).quantidade += item.quantidade;
+            } else {
+                acc.set(item.peca_id, { ...item });
+            }
+            return acc;
+        }, new Map());
+
+        const listaFinal = Array.from(itensUnificados.values());
+
         let valorTotalPedido = 0;
         const listaItensProcessados = [];
 
-        for (const item of itens) {
+        for (const item of listaFinal) {
            
             const peca = await pecaService.buscarPorId(item.peca_id);
 
