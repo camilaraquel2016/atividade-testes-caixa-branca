@@ -8,14 +8,14 @@ const idSchema = require("../schemas/idSchema");
 
 const {pecaPostSchema, pecaPatchSchema} = require("../schemas/pecaSchema");
 
-router.post('/pecas', validarRequisicao(pecaPostSchema), pecaController.criar);
+router.post('/', validarRequisicao(pecaPostSchema), pecaController.criar);
 
-router.get('/pecas', pecaController.listarTodas);
+router.get('/', pecaController.listarTodas);
 
-router.get('/pecas/:id', validarRequisicao(idSchema, "params"),  pecaController.buscarPorId);
+router.get('/:id', validarRequisicao(idSchema, "params"),  pecaController.buscarPorId);
 
-router.patch('/pecas/:id', validarRequisicao(idSchema, "params"), validarRequisicao(pecaPatchSchema), pecaController.atualizar);
+router.patch('/:id', validarRequisicao(idSchema, "params"), validarRequisicao(pecaPatchSchema), pecaController.atualizar);
 
-router.delete('/pecas/:id', pecaController.deletar);
+router.delete('/:id', validarRequisicao(idSchema, "params"), pecaController.deletar);
 
 module.exports = router;

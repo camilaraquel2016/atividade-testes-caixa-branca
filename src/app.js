@@ -17,8 +17,8 @@ app.get('/', (req, res) => {
     });
 });
 
-app.use(categoriaRoutes);
-app.use(pecaRoutes);
+app.use('/api/categorias', categoriaRoutes);
+app.use('/api/pecas', pecaRoutes);
 
 app.use('/api/clientes', clienteRoutes);
 app.use('/api/pedidos', pedidoRoutes);
