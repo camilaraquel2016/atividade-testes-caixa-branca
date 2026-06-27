@@ -9,7 +9,6 @@ class PecaController {
 
     async listarTodas(req, res) {
         const filtros = req.query;
-        console.log(filtros);
         const pecas = await pecaService.listarTodas(filtros);
         return res.status(200).json(pecas);
     }
