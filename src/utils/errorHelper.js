@@ -6,9 +6,7 @@ async function withMappedError(fn, errorMap) {
 
         if (!handler) throw e;
 
-        const error = new Error(handler.message);
-        error.statusCode = handler.statusCode;
-        throw error;
+        throw new handler.error(handler.message)
     }
 }
 
