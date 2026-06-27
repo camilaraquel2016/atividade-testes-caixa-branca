@@ -7,14 +7,9 @@ const { withMappedError } = require("../utils/errorHelper");
 class ClienteService {
 
     async criar(dadosCliente) {
-        const { nome, cpf, telefone } = dadosCliente;
 
         return await withMappedError(
-            () => clienteRepository.create({
-                nome: nome.trim(),
-                cpf: cpf.trim(),
-                telefone: telefone.trim()
-            }),
+            () => clienteRepository.create(dadosCliente),
             {
                 [DbConstraints.CLIENTES.CPF_UNIQUE]: { message: "Já existe um cliente cadastrado com este CPF.", statusCode: 409 },
                 [DbConstraints.CLIENTES.TELEFONE_UNIQUE]: { message: "Já existe um cliente cadastrado com este telefone.", statusCode: 409 }
@@ -44,15 +39,15 @@ class ClienteService {
         const clienteOriginal = await this.buscarPorId(id);
 
 
-        if (dadosCliente.cpf && dadosCliente.cpf.trim() !== clienteOriginal.cpf) {
+        if (dadosCliente.cpf && dadosCliente.cpf !== clienteOriginal.cpf) {
             const error = new Error("Não é permitido alterar o CPF de um cliente cadastrado.");
             error.statusCode = 400;
             throw error;
         }
 
         const clienteAlterado = {
-            nome: dadosCliente.nome !== undefined ? dadosCliente.nome.trim() : clienteOriginal.nome,
-            telefone: dadosCliente.telefone !== undefined ? dadosCliente.telefone.trim() : clienteOriginal.telefone
+            nome: dadosCliente.nome !== undefined ? dadosCliente.nome : clienteOriginal.nome,
+            telefone: dadosCliente.telefone !== undefined ? dadosCliente.telefone : clienteOriginal.telefone
         };
 
         return await withMappedError(
