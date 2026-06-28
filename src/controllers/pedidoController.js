@@ -8,7 +8,7 @@ class PedidoController {
     }
 
     async listar(req, res) {
-        const filtros = { situacao: req.query.situacao };
+        const filtros = { status: req.query.status};
         const pedidos = await pedidoService.listar(filtros);
         res.status(200).json(pedidos);
     }

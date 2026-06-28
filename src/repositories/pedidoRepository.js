@@ -68,8 +68,8 @@ class PedidoRepository {
         const valores = [];
         const condicoes = [];
 
-        if (filtros && filtros.situacao) {
-            valores.push(filtros.situacao.toUpperCase());
+        if (filtros && filtros.status) {
+            valores.push(filtros.status.toUpperCase());
             condicoes.push(`STATUS = $${valores.length}`);
         }
 

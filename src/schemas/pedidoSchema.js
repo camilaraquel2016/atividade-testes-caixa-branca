@@ -28,7 +28,7 @@ const pedidoBaseSchema = z.object({
 const pedidoPostSchema = pedidoBaseSchema;
 
 const pedidoQuerySchema = z.object({
-    situacao: z.string().optional(),
+    status: z.string().optional(),
     cliente_id: z.string().uuid("O 'cliente_id' para filtro deve ser um UUID válido.").optional()
 });
 
