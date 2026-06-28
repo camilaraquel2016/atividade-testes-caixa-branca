@@ -118,7 +118,8 @@ class PedidoRepository {
     async update(id, dados) {
         const query = `
             UPDATE PEDIDOS 
-            SET STATUS = $1 
+            SET STATUS = $1,
+            ATUALIZADO_EM = NOW() 
             WHERE ID = $2 
             RETURNING *
         `;
