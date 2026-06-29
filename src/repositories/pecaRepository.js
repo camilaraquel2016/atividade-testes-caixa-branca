@@ -90,7 +90,7 @@ class PecaRepository {
         }
 
         if (situacao) {
-            query += ` AND SITUACAO = $${contador}`;
+            query += ` AND SITUACAO ILIKE $${contador}`;
             valores.push(situacao);
             contador++;
         }
