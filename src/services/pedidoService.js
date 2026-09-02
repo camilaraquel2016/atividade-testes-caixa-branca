@@ -13,6 +13,33 @@ const ConflictError = require('../exceptions/ConflictError');
 
 class PedidoService {
 
+    validarTransicaoStatus(statusAtual, novoStatus) {
+        const statusValidos = ['PENDENTE', 'CONFIRMADO', 'FINALIZADO', 'CANCELADO'];
+        const statusFormatado = novoStatus ? novoStatus.toUpperCase() : '';
+
+        if (!statusValidos.includes(statusFormatado)) {
+            throw new BusinessError('Status informado é inválido.');
+        }
+        
+        if (statusAtual === statusFormatado) {
+            throw new BusinessError(`O pedido já está com o status ${statusFormatado}.`);
+        }
+
+        if (statusAtual === 'FINALIZADO' || statusAtual === 'CANCELADO') {
+            throw new BusinessError(`Não é permitido alterar o status de um pedido que já está ${statusAtual}.`);
+        }
+
+        if (statusFormatado === 'FINALIZADO' && statusAtual === 'PENDENTE') {
+            throw new BusinessError("Não é permitido finalizar um pedido PENDENTE. Ele precisa ser CONFIRMADO primeiro.");
+        }
+
+        if (statusFormatado === 'PENDENTE' && statusAtual === 'CONFIRMADO') {
+            throw new BusinessError("Este pedido já foi CONFIRMADO. Você não pode fazê-lo voltar para PENDENTE.");
+        }
+
+        return statusFormatado;
+    }
+
     async #estornarEstoque(pedido) {
         for (const item of pedido.itens) {
             const peca = await pecaService.buscarPorId(item.peca_id);
@@ -105,27 +132,9 @@ class PedidoService {
     }
 
     async atualizarStatus(id, novoStatus) {
-        const statusFormatado = novoStatus ? novoStatus.toUpperCase() : '';
-
-        servicesValidador.statusPedidoValido(statusFormatado);
-
         const pedidoOriginal = await this.buscarPorId(id);
 
-        if (pedidoOriginal.status === statusFormatado) {
-            throw new BusinessError(`O pedido já está com o status ${statusFormatado}.`);
-        }
-
-        if (pedidoOriginal.status === 'FINALIZADO' || pedidoOriginal.status === 'CANCELADO') {
-            throw new BusinessError(`Não é permitido alterar o status de um pedido que já está ${pedidoOriginal.status}.`);
-        }
-
-        if (statusFormatado === 'FINALIZADO' && pedidoOriginal.status === 'PENDENTE') {
-            throw new BusinessError("Não é permitido finalizar um pedido PENDENTE. Ele precisa ser CONFIRMADO primeiro.");
-        }
-
-        if (statusFormatado === 'PENDENTE' && pedidoOriginal.status === 'CONFIRMADO') {
-            throw new BusinessError("Este pedido já foi CONFIRMADO. Você não pode fazê-lo voltar para PENDENTE.");
-        }
+        const statusFormatado = PedidoService.validarTransicaoStatus(pedidoOriginal.status, novoStatus);
 
         if (statusFormatado === 'CANCELADO') {
             await this.#estornarEstoque(pedidoOriginal);
